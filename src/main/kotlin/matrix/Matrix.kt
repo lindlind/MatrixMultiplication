@@ -19,14 +19,14 @@ class Matrix private constructor(
     companion object {
 
         fun from2dArray(array: Array<Array<Double>>): Matrix {
-            val rowSizes = array.map{ it.size }.distinct()
+            val rowSizes = array.map { it.size }.distinct()
             if (rowSizes.size > 1) throw IllegalArgumentException("Different size of rows")
             if (array.isEmpty() || array[0].isEmpty()) return emptyMatrix()
             return Matrix(array, array.size, array[0].size)
         }
 
         fun from2dList(list: List<List<Double>>) =
-            from2dArray(list.map{ it.toTypedArray() }.toTypedArray())
+            from2dArray(list.map { it.toTypedArray() }.toTypedArray())
 
         fun emptyMatrix(): Matrix = Matrix(emptyArray(), 0, 0)
 
@@ -40,7 +40,7 @@ class Matrix private constructor(
     }
 
     operator fun set(i: Int, j: Int, value: Double) {
-        matrix[i][j] = value
+        if (i < rows && j < columns) matrix[i][j] = value
     }
 
     fun map(f: (Double) -> Double): Matrix = from2dList(matrix.map { row -> row.map { x -> f(x) } })
@@ -48,62 +48,44 @@ class Matrix private constructor(
     operator fun plus(other: Matrix): Matrix {
         val resultRows = max(this.rows, other.rows)
         val resultColumns = max(this.columns, other.columns)
-        val result = Array(resultRows) { Array(resultColumns) { 0.0 } }
-        for (i in 0 until resultRows) {
-            for (j in 0 until resultColumns) {
-                result[i][j] += this[i, j]
-                result[i][j] += other[i, j]
-            }
+        val result = Matrix(resultRows, resultColumns)
+        for (i in 0 until resultRows) for (j in 0 until resultColumns) {
+            result[i, j] += this[i, j]
+            result[i, j] += other[i, j]
         }
 
-        return Matrix(result, resultRows, resultColumns)
+        return result
     }
 
     operator fun minus(other: Matrix): Matrix {
         val resultRows = max(this.rows, other.rows)
         val resultColumns = max(this.columns, other.columns)
-        val result = Array(resultRows) { Array(resultColumns) { 0.0 } }
-        for (i in 0 until resultRows) {
-            for (j in 0 until resultColumns) {
-                result[i][j] += this[i, j]
-                result[i][j] -= other[i, j]
-            }
+        val result = Matrix(resultRows, resultColumns)
+        for (i in 0 until resultRows) for (j in 0 until resultColumns) {
+            result[i, j] += this[i, j]
+            result[i, j] -= other[i, j]
         }
 
-        return Matrix(result, resultRows, resultColumns)
+        return result
     }
 
-    operator fun times(k: Double): Matrix = map{ x -> x * k }
+    operator fun times(k: Double): Matrix = map { x -> x * k }
 
     fun slice(rowsRange: IntRange, columnsRange: IntRange): Matrix {
-        if (rowsRange.start >= rows || columnsRange.start >= columns) return emptyMatrix()
+        if (rowsRange.first >= rows || columnsRange.first >= columns) return emptyMatrix()
         if (rowsRange.isEmpty() || columnsRange.isEmpty()) return emptyMatrix()
-
-        val actualRows = rowsRange.start..min(rows - 1, rowsRange.endInclusive)
-        val actualColumns = columnsRange.start..min(columns - 1, columnsRange.endInclusive)
-        return from2dList(matrix.slice(actualRows).map { row -> row.slice(actualColumns) })
-    }
-
-    fun concatHorizontally(other: Matrix): Matrix {
-        if (this.isEmpty()) return other
-        if (other.isEmpty()) return this
-
-        val actualRows = min(this.rows, other.rows)
-        val matrixA = this.matrix.slice(0 until actualRows)
-        val matrixB = other.matrix.slice(0 until actualRows)
-        return from2dList(
-            matrixA.zip(matrixB) { rowLeft, rowRight -> rowLeft.plus(rowRight).toList() }
+        return slice(
+            rowsRange.first, min(rows, rowsRange.last + 1),
+            columnsRange.first, min(columns, columnsRange.last + 1)
         )
     }
 
-    fun concatVertically(other: Matrix): Matrix {
-        if (this.isEmpty()) return other
-        if (other.isEmpty()) return this
-
-        val actualColumns = min(this.columns, other.columns)
-        val matrixA = this.matrix.map { it.slice(0 until actualColumns) }
-        val matrixB = other.matrix.map { it.slice(0 until actualColumns) }
-        return from2dList(matrixA.plus(matrixB))
+    private fun slice(rowFrom: Int, rowUntil: Int, columnFrom: Int, columnUntil: Int): Matrix {
+        val sliced = Matrix(rowUntil - rowFrom, columnUntil - columnFrom)
+        for (i in rowFrom until rowUntil) for (j in columnFrom until columnUntil) {
+            sliced[i - rowFrom, j - columnFrom] = this[i, j]
+        }
+        return sliced
     }
 
     fun transpose(): Matrix {

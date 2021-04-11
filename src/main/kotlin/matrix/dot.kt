@@ -9,7 +9,7 @@ import kotlin.math.pow
 
 typealias ChunkedMatrix = Array<Array<Matrix>>
 
-fun emptyChunkedMatrix(): ChunkedMatrix = Array(2) { Array(2) { Matrix.emptyMatrix() } }
+fun emptyChunkedMatrix(): ChunkedMatrix = Array(2) { Array(2) { emptyMatrix() } }
 
 operator fun Matrix.times(other: Matrix): Matrix {
     if (this.columns != other.rows) throw IllegalArgumentException("Invalid size of matrices")
@@ -22,7 +22,7 @@ private fun dot(matrixA: Matrix, matrixB: Matrix): Matrix {
 
     val maxSideSize = maxOf(matrixA.rows, matrixA.columns, matrixB.rows, matrixB.columns)
     val chunkRank = ceil(log2(maxSideSize.toDouble()))
-    if (chunkRank <= 2) return dotSimple(matrixA, matrixB)
+    if (chunkRank <= 7) return dotSimple(matrixA, matrixB)
     val chunkSize = (2.0).pow(chunkRank).toInt()
 
     val chunkedA = toChunked(matrixA, chunkSize / 2)
@@ -34,11 +34,10 @@ private fun dot(matrixA: Matrix, matrixB: Matrix): Matrix {
         else -> dotStrassen(chunkedA, chunkedB)
     }
 
-    return fromChunked(chunkedC)
+    return fromChunked(chunkedC, chunkSize / 2)
 }
 
 private fun dotStrassen(matrixA: ChunkedMatrix, matrixB: ChunkedMatrix): ChunkedMatrix {
-    //if (chunkSize < 2) return dotSimple(matrixA, matrixB)
     val matrixP1 = dot(matrixA[0][0] + matrixA[1][1], matrixB[0][0] + matrixB[1][1])
     val matrixP2 = dot(matrixA[1][0] + matrixA[1][1], matrixB[0][0])
     val matrixP3 = dot(matrixA[0][0], matrixB[0][1] - matrixB[1][1])
@@ -52,12 +51,10 @@ private fun dotStrassen(matrixA: ChunkedMatrix, matrixB: ChunkedMatrix): Chunked
     matrixC[0][1] = matrixP3 + matrixP5
     matrixC[1][0] = matrixP2 + matrixP4
     matrixC[1][1] = matrixP1 - matrixP2 + matrixP3 + matrixP6
-
     return matrixC
 }
 
 private fun dotChunked(matrixA: ChunkedMatrix, matrixB: ChunkedMatrix): ChunkedMatrix {
-    //if (chunkSize < 2) return dotSimple(matrixA, matrixB)
     val matrixC = emptyChunkedMatrix()
     matrixC[0][0] = dot(matrixA[0][0], matrixB[0][0]) + dot(matrixA[0][1], matrixB[1][0])
     matrixC[0][1] = dot(matrixA[0][0], matrixB[0][1]) + dot(matrixA[0][1], matrixB[1][1])
@@ -88,6 +85,22 @@ private fun toChunked(matrix: Matrix, chunkSize: Int): ChunkedMatrix {
     return chunked
 }
 
-private fun fromChunked(chunked: ChunkedMatrix): Matrix =
-    chunked[0][0].concatHorizontally(chunked[0][1])
-        .concatVertically(chunked[1][0].concatHorizontally(chunked[1][1]))
+private fun fromChunked(chunked: ChunkedMatrix, chunkSize: Int): Matrix {
+    val matrix = Matrix(
+        chunkSize + min(chunked[1][0].rows, chunked[1][1].rows),
+        chunkSize + min(chunked[0][1].columns, chunked[1][1].columns)
+    )
+    for (i in 0 until chunked[0][0].rows) for (j in 0 until chunked[0][0].columns) {
+        matrix[i, j] = chunked[0][0][i, j]
+    }
+    for (i in 0 until chunked[0][1].rows) for (j in 0 until chunked[0][1].columns) {
+        matrix[i, chunkSize + j] = chunked[0][1][i, j]
+    }
+    for (i in 0 until chunked[1][0].rows) for (j in 0 until chunked[1][0].columns) {
+        matrix[chunkSize + i, j] = chunked[1][0][i, j]
+    }
+    for (i in 0 until chunked[1][1].rows) for (j in 0 until chunked[1][1].columns) {
+        matrix[chunkSize + i, chunkSize + j] = chunked[1][1][i, j]
+    }
+    return matrix
+}
