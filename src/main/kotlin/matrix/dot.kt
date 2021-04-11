@@ -2,14 +2,7 @@ package matrix
 
 import matrix.Matrix.Companion.emptyMatrix
 import java.lang.IllegalArgumentException
-import kotlin.math.ceil
-import kotlin.math.log2
-import kotlin.math.min
-import kotlin.math.pow
-
-typealias ChunkedMatrix = Array<Array<Matrix>>
-
-fun emptyChunkedMatrix(): ChunkedMatrix = Array(2) { Array(2) { emptyMatrix() } }
+import kotlin.math.*
 
 operator fun Matrix.times(other: Matrix): Matrix {
     if (this.columns != other.rows) throw IllegalArgumentException("Invalid size of matrices")
@@ -17,7 +10,6 @@ operator fun Matrix.times(other: Matrix): Matrix {
 }
 
 private fun dot(matrixA: Matrix, matrixB: Matrix): Matrix {
-
     if (matrixA.isEmpty() || matrixB.isEmpty()) return emptyMatrix()
 
     val maxSideSize = maxOf(matrixA.rows, matrixA.columns, matrixB.rows, matrixB.columns)
@@ -104,3 +96,7 @@ private fun fromChunked(chunked: ChunkedMatrix, chunkSize: Int): Matrix {
     }
     return matrix
 }
+
+private fun emptyChunkedMatrix(): ChunkedMatrix = Array(2) { Array(2) { emptyMatrix() } }
+
+private typealias ChunkedMatrix = Array<Array<Matrix>>

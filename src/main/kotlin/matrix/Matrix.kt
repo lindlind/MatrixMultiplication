@@ -1,8 +1,7 @@
 package matrix
 
 import java.lang.IllegalArgumentException
-import kotlin.math.max
-import kotlin.math.min
+import kotlin.math.*
 
 class Matrix private constructor(
     private val matrix: Array<Array<Double>>,
@@ -91,7 +90,7 @@ class Matrix private constructor(
     fun transpose(): Matrix {
         val transposed = Matrix(this.columns, this.rows)
         for (i in 0 until rows) for (j in 0 until columns) {
-            transposed[i, j] = this[j, i]
+            transposed[j, i] = this[i, j]
         }
         return transposed
     }
@@ -105,4 +104,23 @@ class Matrix private constructor(
         }
         println()
     }
+
+    override fun equals(other: Any?): Boolean {
+        if (this === other) return true
+        if (other !is Matrix) return false
+
+        if (!matrix.contentDeepEquals(other.matrix)) return false
+        if (rows != other.rows) return false
+        if (columns != other.columns) return false
+
+        return true
+    }
+
+    override fun hashCode(): Int {
+        var result = matrix.contentDeepHashCode()
+        result = 31 * result + rows
+        result = 31 * result + columns
+        return result
+    }
+
 }
