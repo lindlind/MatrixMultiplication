@@ -9,12 +9,14 @@ operator fun Matrix.times(other: Matrix): Matrix {
     return dot(this, other)
 }
 
+private const val HIGHEST_CHUNK_RANK_FOR_SIMPLE_DOT = 7
+
 private fun dot(matrixA: Matrix, matrixB: Matrix): Matrix {
     if (matrixA.isEmpty() || matrixB.isEmpty()) return emptyMatrix()
 
     val maxSideSize = maxOf(matrixA.rows, matrixA.columns, matrixB.rows, matrixB.columns)
     val chunkRank = ceil(log2(maxSideSize.toDouble()))
-    if (chunkRank <= 7) return dotSimple(matrixA, matrixB)
+    if (chunkRank <= HIGHEST_CHUNK_RANK_FOR_SIMPLE_DOT) return dotSimple(matrixA, matrixB)
     val chunkSize = (2.0).pow(chunkRank).toInt()
 
     val chunkedA = toChunked(matrixA, chunkSize / 2)
@@ -70,10 +72,12 @@ fun dotSimple(matrixA: Matrix, matrixB: Matrix): Matrix {
 
 private fun toChunked(matrix: Matrix, chunkSize: Int): ChunkedMatrix {
     val chunked = emptyChunkedMatrix()
-    chunked[0][0] = matrix.slice(0 until chunkSize, 0 until chunkSize)
-    chunked[0][1] = matrix.slice(0 until chunkSize, chunkSize until 2 * chunkSize)
-    chunked[1][0] = matrix.slice(chunkSize until 2 * chunkSize, 0 until chunkSize)
-    chunked[1][1] = matrix.slice(chunkSize until 2 * chunkSize, chunkSize until 2 * chunkSize)
+    for (i in 0..1) for (j in 0..1) {
+        chunked[i][j] = matrix.slice(
+            i * chunkSize until (i + 1) * chunkSize,
+            j * chunkSize until (j + 1) * chunkSize
+        )
+    }
     return chunked
 }
 
@@ -82,17 +86,11 @@ private fun fromChunked(chunked: ChunkedMatrix, chunkSize: Int): Matrix {
         chunkSize + min(chunked[1][0].rows, chunked[1][1].rows),
         chunkSize + min(chunked[0][1].columns, chunked[1][1].columns)
     )
-    for (i in 0 until chunked[0][0].rows) for (j in 0 until chunked[0][0].columns) {
-        matrix[i, j] = chunked[0][0][i, j]
-    }
-    for (i in 0 until chunked[0][1].rows) for (j in 0 until chunked[0][1].columns) {
-        matrix[i, chunkSize + j] = chunked[0][1][i, j]
-    }
-    for (i in 0 until chunked[1][0].rows) for (j in 0 until chunked[1][0].columns) {
-        matrix[chunkSize + i, j] = chunked[1][0][i, j]
-    }
-    for (i in 0 until chunked[1][1].rows) for (j in 0 until chunked[1][1].columns) {
-        matrix[chunkSize + i, chunkSize + j] = chunked[1][1][i, j]
+    for (i in 0..1) for (j in 0..1) {
+        val chunk = chunked[i][j]
+        for (row in 0 until chunk.rows) for (column in 0 until chunk.columns) {
+            matrix[chunkSize * i + row, chunkSize * j + column] = chunk[i, j]
+        }
     }
     return matrix
 }

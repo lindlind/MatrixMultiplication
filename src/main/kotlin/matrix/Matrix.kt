@@ -96,13 +96,21 @@ class Matrix private constructor(
     }
 
     fun print() {
-        for (row in matrix) {
-            for (x in row) {
-                print("$x".padStart(7))
+        for (i in 0 until rows) {
+            if (i == 0) print("[ ")
+            else print("  ")
+
+            print("[ ")
+            for (j in 0 until columns) {
+                print("${this[i, j]}".padEnd(20))
+                if (j != columns - 1) print(", ")
             }
+            print("]")
+
+            if (i != rows - 1) print(",")
+            else print(" ]")
             println()
         }
-        println()
     }
 
     override fun equals(other: Any?): Boolean {
