@@ -67,11 +67,12 @@ private fun dotChunked(matrixA: ChunkedMatrix, matrixB: ChunkedMatrix): ChunkedM
 }
 
 fun dotSimple(matrixA: Matrix, matrixB: Matrix): Matrix {
-    val matrixC = Matrix(matrixA.rows, matrixB.columns)
+    val matrixB = matrixB.transpose()
+    val matrixC = Matrix(matrixA.rows, matrixB.rows)
     for (i in 0 until matrixA.rows) {
-        for (k in 0 until matrixB.columns) {
-            for (j in 0 until min(matrixA.columns, matrixB.rows)) {
-                matrixC[i, k] += matrixA[i, j] * matrixB[j, k]
+        for (k in 0 until matrixB.rows) {
+            for (j in 0 until min(matrixA.columns, matrixB.columns)) {
+                matrixC[i, k] += matrixA[i, j] * matrixB[k, j]
             }
         }
     }

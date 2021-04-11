@@ -106,6 +106,14 @@ class Matrix private constructor(
         return from2dList(matrixA.plus(matrixB))
     }
 
+    fun transpose(): Matrix {
+        val transposed = Matrix(this.columns, this.rows)
+        for (i in 0 until rows) for (j in 0 until columns) {
+            transposed[i, j] = this[j, i]
+        }
+        return transposed
+    }
+
     fun print() {
         for (row in matrix) {
             for (x in row) {
