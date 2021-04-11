@@ -51,4 +51,28 @@ So for matrices with size of side less then 128 the simple algorithm of 3 nested
 
 ## Stats
 
-TODO
+### Time comparison
+
+Comparison of time spent on multiplication M[a x b] * M[b x c] using written algorithm and 3 nested for-loop algorithm
+
+| a    | b    | c    | Written algorithm | 3 nested for-loop |
+|------|------|------|-------------------|-------------------|
+| 500  | 500  | 500  | 2,1 seconds       |  2,7 seconds      |
+| 700  | 700  | 700  | 7,3 seconds       |  7,3 seconds      |
+| 1000 | 1000 | 1000 | 14,5 seconds      |  25 seconds       |
+| 1500 | 1500 | 1500 | 63 seconds        |  81 seconds       |
+| 500  | 500  | 1500 | 6 seconds         |  9 seconds        |
+| 500  | 1500 | 500  | 6 seconds         |  8 seconds        |
+| 1500 | 500  | 500  | 6 seconds         |  8 seconds        |
+| 500  | 1500 | 1500 | 18 seconds        |  25 seconds       |
+| 1500 | 500  | 1500 | 19 seconds        |  25 seconds       |
+| 1500 | 1500 | 500  | 18 seconds        |  26 seconds       |
+
+### Space comparison
+
+Memory usage of multiplication M[2000 x 2000] * M[2000 x 2000] using **written** algorithm
+![image](https://user-images.githubusercontent.com/32044737/114318513-fca19b00-9b15-11eb-949e-e7a3fc3cc08b.png)
+
+
+Memory usage of multiplication M[2000 x 2000] * M[2000 x 2000] using **trivial** algorithm
+![image](https://user-images.githubusercontent.com/32044737/114318709-f65fee80-9b16-11eb-9f37-fa751752cf67.png)
