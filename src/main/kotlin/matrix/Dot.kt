@@ -82,14 +82,21 @@ private fun toChunked(matrix: Matrix, chunkSize: Int): ChunkedMatrix {
 }
 
 private fun fromChunked(chunked: ChunkedMatrix, chunkSize: Int): Matrix {
+    val minNotZero: (Int, Int) -> Int = { a, b ->
+        when {
+            a == 0 -> b
+            b == 0 -> a
+            else -> min(a, b)
+        }
+    }
     val matrix = Matrix(
-        chunkSize + min(chunked[1][0].rows, chunked[1][1].rows),
-        chunkSize + min(chunked[0][1].columns, chunked[1][1].columns)
+        minNotZero(chunked[0][0].rows + chunked[1][0].rows, chunked[0][1].rows + chunked[1][1].rows),
+        minNotZero(chunked[0][0].columns + chunked[0][1].columns, chunked[1][0].columns + chunked[1][1].columns)
     )
     for (i in 0..1) for (j in 0..1) {
         val chunk = chunked[i][j]
         for (row in 0 until chunk.rows) for (column in 0 until chunk.columns) {
-            matrix[chunkSize * i + row, chunkSize * j + column] = chunk[i, j]
+            matrix[chunkSize * i + row, chunkSize * j + column] = chunk[row, column]
         }
     }
     return matrix
